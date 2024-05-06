@@ -5,29 +5,7 @@ const apiKey = 'C6BB37FB-A012-4FDD-B12F-652C858712EB';
 const baseUrl = 'https://rest.coinapi.io/v1/exchangerate';
 String sampleUrl = '$baseUrl/BTC/USD?apikey=$apiKey';
 
-const List<String> currenciesList = [
-  'AUD',
-  'BRL',
-  'CAD',
-  'CNY',
-  'EUR',
-  'GBP',
-  'HKD',
-  'IDR',
-  'ILS',
-  'INR',
-  'JPY',
-  'MXN',
-  'NOK',
-  'NZD',
-  'PLN',
-  'RON',
-  'RUB',
-  'SEK',
-  'SGD',
-  'USD',
-  'ZAR'
-];
+const List<String> currenciesList = ['AUD', 'CAD', 'EUR', 'INR', 'JPY', 'PKR', 'USD'];
 
 const List<String> cryptoList = [
   'BTC',
@@ -36,16 +14,21 @@ const List<String> cryptoList = [
 ];
 
 class CoinData {
-  Future getCoinData(String currency) async {
+  Future getRates(String currency) async {
+    List<String>? rates = [];
     http.Response res;
-    try {
-      res = await http.get(Uri.parse('$baseUrl/BTC/$currency?apikey=$apiKey'));
-    } catch (e) {
-      return null;
+    for (String coin in cryptoList) {
+      try {
+        res = await http.get(Uri.parse('$baseUrl/${coin}/$currency?apikey=$apiKey'));
+      } catch (e) {
+        return null;
+      }
+      if (res.statusCode == 200) {
+        double rate = json.decode(res.body)['rate'];
+        rates.add(rate.toStringAsFixed(0));
+      } else
+        return null;
     }
-    if (res.statusCode == 200)
-      return json.decode(res.body);
-    else
-      return null;
+    return rates;
   }
 }

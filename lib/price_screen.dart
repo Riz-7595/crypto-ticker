@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart';
 import 'dart:io' show Platform;
 import 'coin_data.dart';
 
@@ -11,14 +10,45 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'AUD';
-  String rate = '?';
+  List<String> rates = ['?', '?', '?'];
 
-  Future<String> getRate(String currency) async {
+  Future<List<String>> getRates(String currency) async {
     CoinData coinData = CoinData();
-    var data = await coinData.getCoinData(currency);
-    if (data == null) return '?';
-    double temp = data['rate'];
-    return temp.toStringAsFixed(0);
+    var rates = await coinData.getRates(currency);
+    if (rates == null) return ['?', '?', '?'];
+    return rates;
+  }
+
+  List<Widget> getCards() {
+    List<Widget> cards = [];
+    int i = 0;
+    for (String coin in cryptoList) {
+      cards.add(
+        Padding(
+          padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+          child: Card(
+            color: Colors.lightBlueAccent,
+            elevation: 5.0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+              child: Text(
+                '1 $coin = ${rates[i]} $selectedCurrency',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      i++;
+    }
+    return cards;
   }
 
   Widget androidDropdown() {
@@ -36,10 +66,10 @@ class _PriceScreenState extends State<PriceScreen> {
       value: selectedCurrency,
       style: TextStyle(fontSize: 20),
       onChanged: (value) async {
-        var temp = await getRate(value!);
+        var temp = await getRates(value!);
         setState(() {
           selectedCurrency = value;
-          rate = temp;
+          rates = temp;
         });
       },
       items: items,
@@ -60,6 +90,7 @@ class _PriceScreenState extends State<PriceScreen> {
       itemExtent: 32,
       backgroundColor: Colors.lightBlue,
       onSelectedItemChanged: (index) {
+        //TODO Apply get crypto rates
         setState(() {
           selectedCurrency = currenciesList[index];
         });
@@ -72,32 +103,16 @@ class _PriceScreenState extends State<PriceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('🤑 Coin Ticker'),
+        title: Text('🤑 Crypto Ticker'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $rate $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: getCards(),
           ),
           Container(
             height: 150.0,
